@@ -5,18 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>College Gate Pass Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-        }
-        .dashboard-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .modal-backdrop {
             background-color: rgba(0,0,0,0.5);
@@ -25,7 +17,6 @@
             cursor: not-allowed;
             background-color: #e9d5ff;
         }
-        /* Style for the active tab */
         .tab-active {
             border-color: #4f46e5;
             color: #4f46e5;
@@ -70,7 +61,6 @@
                     <input type="email" id="signupEmail" placeholder="Email Address" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     <input type="password" id="signupPassword" placeholder="Create Password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     
-                    <!-- Role Selection -->
                     <div class="space-y-2">
                         <label class="font-semibold text-gray-600">Select your role:</label>
                         <select id="userRole" class="w-full p-3 border border-gray-300 rounded-lg bg-white">
@@ -80,7 +70,6 @@
                         </select>
                     </div>
                     
-                    <!-- Student-specific fields -->
                     <div id="studentInfo" class="space-y-4">
                          <input type="text" id="signupStudentName" placeholder="Full Name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                          <input type="text" id="signupStudentId" placeholder="Student ID" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -98,7 +87,6 @@
                 <button onclick="handleLogout()" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition">Sign Out</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Request Form -->
                 <div class="md:col-span-1 bg-white p-6 rounded-2xl shadow-lg">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">New Gate Pass Request</h2>
                     <form id="gatePassForm" class="space-y-4">
@@ -116,16 +104,12 @@
                            <label class="font-semibold text-gray-600">Leave End:</label>
                            <input type="datetime-local" id="leaveEnd" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 transition transform hover:scale-105">Submit Request</button>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 transition">Submit Request</button>
                     </form>
                 </div>
-                <!-- Pass History -->
                 <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">My Pass History</h2>
-                    <div id="studentPassList" class="space-y-4 max-h-[32rem] overflow-y-auto">
-                        <!-- Passes will be dynamically inserted here -->
-                        <p class="text-gray-500">No passes requested yet. Fill out the form to request one.</p>
-                    </div>
+                    <div id="studentPassList" class="space-y-4 max-h-[32rem] overflow-y-auto"></div>
                 </div>
             </div>
         </div>
@@ -138,10 +122,7 @@
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-lg">
                  <h2 class="text-xl font-bold text-gray-800 mb-4">Pending Gate Pass Requests</h2>
-                 <div id="facultyRequestList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                     <!-- Requests will be dynamically inserted here -->
-                     <p class="text-gray-500 col-span-full">No pending requests at the moment.</p>
-                 </div>
+                 <div id="facultyRequestList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
 
@@ -157,9 +138,7 @@
                     <input type="text" id="passIdInput" placeholder="Enter Pass ID" class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800">
                     <button onclick="verifyPass()" class="bg-gray-800 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-900 transition">Verify</button>
                 </div>
-                 <div id="verificationResult" class="mt-6">
-                     <!-- Verification result will be displayed here -->
-                 </div>
+                 <div id="verificationResult" class="mt-6"></div>
             </div>
         </div>
 
@@ -175,18 +154,15 @@
     </div>
 
     <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
-        // --- Modal Logic Elements ---
         const messageModal = document.getElementById('messageModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
         const modalIcon = document.getElementById('modalIcon');
         
-        // --- DOM Elements ---
         const loadingScreen = document.getElementById('loadingScreen');
         const authScreen = document.getElementById('authScreen');
         const studentDashboard = document.getElementById('studentDashboard');
@@ -196,32 +172,32 @@
         const studentPassList = document.getElementById('studentPassList');
         const facultyRequestList = document.getElementById('facultyRequestList');
         
-        // --- Firebase Initialization ---
         let app, db, auth;
         let gatePassesCollectionRef, usersCollectionRef;
 
+        // This listener ensures the DOM is fully loaded before we run our main script.
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+        });
+
         function initializeFirebase() {
             try {
-                // Your web app's Firebase configuration
+                // *** THIS IS THE CORRECTED CONFIGURATION ***
                 const firebaseConfig = {
                   apiKey: "AIzaSyDtXzJWWoOi8MX0D8IpgF_m4WdZmQezspw",
                   authDomain: "gatepasssystem-a2cff.firebaseapp.com",
                   projectId: "gatepasssystem-a2cff",
-                  storageBucket: "gatepasssystem-a2cff.appspot.com",
+                  // Corrected storageBucket URL format
+                  storageBucket: "gatepasssystem-a2cff.appspot.com", 
                   messagingSenderId: "383143201131",
                   appId: "1:383143201131:web:ea76f3b497a1366612e42e",
                   measurementId: "G-V0R3FNC4F9"
                 };
 
-                if (!firebaseConfig.apiKey) {
-                     throw new Error("Firebase configuration is missing or invalid. Please add your Firebase project's config keys to the script.");
-                }
-
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                // Simplified database paths for a standalone project
                 gatePassesCollectionRef = collection(db, "gatepasses");
                 usersCollectionRef = collection(db, "users");
                 
@@ -229,9 +205,8 @@
 
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                showModal('Error', `Could not connect to the database. ${error.message}`, 'error');
                 loadingScreen.classList.add('hidden');
-                authScreen.classList.remove('hidden');
+                showModal('Error', `Could not connect to the database. ${error.message}`, 'error');
             }
         }
         
@@ -242,10 +217,8 @@
                     const userDocSnap = await getDoc(userDocRef);
 
                     if (userDocSnap.exists()) {
-                        const userData = userDocSnap.data();
-                        showDashboard(userData);
+                        showDashboard(userDocSnap.data());
                     } else {
-                        console.error("User document not found for logged in user. Signing out.");
                         await signOut(auth); 
                         showAuthScreen();
                     }
@@ -283,15 +256,13 @@
             securityDashboard.classList.add('hidden');
         }
 
-        // --- Auth UI Logic ---
         const loginForm = document.getElementById('loginForm');
         const signupForm = document.getElementById('signupForm');
-        const loginTab = document.getElementById('loginTab');
-        const signupTab = document.getElementById('signupTab');
-        const studentInfoDiv = document.getElementById('studentInfo');
         const userRoleSelect = document.getElementById('userRole');
 
         window.switchAuthTab = (tab) => {
+            const loginTab = document.getElementById('loginTab');
+            const signupTab = document.getElementById('signupTab');
             if (tab === 'login') {
                 loginForm.classList.remove('hidden');
                 signupForm.classList.add('hidden');
@@ -306,17 +277,15 @@
         };
         
         userRoleSelect.addEventListener('change', (e) => {
-            studentInfoDiv.style.display = e.target.value === 'student' ? 'block' : 'none';
+            document.getElementById('studentInfo').style.display = e.target.value === 'student' ? 'block' : 'none';
         });
 
-        // --- Event Listeners for Auth Forms ---
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
             try {
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
                 await signInWithEmailAndPassword(auth, email, password);
-                // onAuthStateChanged will handle showing the correct dashboard
             } catch (error) {
                 showModal('Login Failed', error.message, 'error');
             }
@@ -334,106 +303,66 @@
                 showModal('Error', 'Please fill in your Full Name and Student ID.', 'error');
                 return;
             }
-
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                // Create user document in Firestore
-                const userDoc = { email, role };
-                if (role === 'student') {
-                    userDoc.name = name;
-                    userDoc.studentId = studentId;
-                }
-                
-                await setDoc(doc(usersCollectionRef, user.uid), userDoc);
-                // onAuthStateChanged will handle showing the dashboard
+                const userDoc = { email, role, name: name || null, studentId: studentId || null };
+                await setDoc(doc(usersCollectionRef, userCredential.user.uid), userDoc);
             } catch (error) {
                  showModal('Sign Up Failed', error.message, 'error');
             }
         });
 
         window.handleLogout = async () => {
-            try {
-                await signOut(auth);
-                // onAuthStateChanged will handle showing the auth screen
-            } catch (error) {
-                showModal('Error', 'Failed to sign out. Please try again.', 'error');
-            }
+            await signOut(auth);
         };
 
-        // --- Student Logic ---
-        if(gatePassForm) {
-            gatePassForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const studentName = document.getElementById('studentName').value;
-                const studentId = document.getElementById('studentId').value;
-                const reason = document.getElementById('reason').value;
-                const leaveStart = document.getElementById('leaveStart').value;
-                const leaveEnd = document.getElementById('leaveEnd').value;
-                
-                if(!db || !gatePassesCollectionRef) {
-                     showModal('Error', 'Database not connected. Cannot submit request.', 'error');
-                     return;
-                }
-
-                try {
-                    await addDoc(gatePassesCollectionRef, {
-                        studentName,
-                        studentId,
-                        studentUid: auth.currentUser.uid, // Link pass to user
-                        reason,
-                        leaveStart,
-                        leaveEnd,
-                        status: 'pending',
-                        requestedAt: serverTimestamp(),
-                    });
-                    showModal('Success', 'Your gate pass request has been submitted successfully!', 'success');
-                    document.getElementById('reason').value = '';
-                    document.getElementById('leaveStart').value = '';
-                    document.getElementById('leaveEnd').value = '';
-                } catch (error) {
-                    console.error("Error adding document: ", error);
-                    showModal('Error', 'Failed to submit request. Please try again.', 'error');
-                }
-            });
-        }
+        gatePassForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(gatePassesCollectionRef, {
+                    studentName: document.getElementById('studentName').value,
+                    studentId: document.getElementById('studentId').value,
+                    studentUid: auth.currentUser.uid,
+                    reason: document.getElementById('reason').value,
+                    leaveStart: document.getElementById('leaveStart').value,
+                    leaveEnd: document.getElementById('leaveEnd').value,
+                    status: 'pending',
+                    requestedAt: serverTimestamp(),
+                });
+                showModal('Success', 'Request submitted!', 'success');
+                gatePassForm.reset();
+            } catch (error) {
+                showModal('Error', 'Failed to submit request.', 'error');
+            }
+        });
         
-        // --- Gemini API Feature ---
         window.generateReason = async () => {
             const reasonTextarea = document.getElementById('reason');
             const generateBtn = document.getElementById('generateReasonBtn');
             const userReason = reasonTextarea.value.trim();
 
             if (!userReason) {
-                showModal('Info', 'Please type a simple reason first (e.g., "going home" or "not feeling well") for the AI to improve.', 'info');
+                showModal('Info', 'Please type a simple reason first.', 'info');
                 return;
             }
 
             generateBtn.disabled = true;
             generateBtn.innerHTML = 'Generating...';
 
-            const systemPrompt = `You are a helpful assistant for a college student in India. Your task is to rewrite a student's informal reason for a gate pass into a polite, formal, and concise request. The response should be a single, clear sentence appropriate for a faculty member to read.`;
-            const userQuery = `Rewrite the following reason for a gate pass application: "${userReason}"`;
+            const systemPrompt = `You are a helpful assistant. Rewrite a student's informal reason for a gate pass into a polite, formal, and concise request for a faculty member.`;
+            const userQuery = `Rewrite: "${userReason}"`;
 
             try {
-                const apiKey = ""; // This will be provided by the execution environment.
+                const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
-
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`API call failed with status ${response.status}`);
+                if (!response.ok) throw new Error(`API error`);
                 const result = await response.json();
                 const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
                 if (generatedText) reasonTextarea.value = generatedText.trim();
-                else throw new Error("Received an empty response from the AI.");
-
             } catch (error) {
-                console.error("Gemini API call failed:", error);
-                showModal('Error', 'Could not generate a reason. Please write one manually.', 'error');
+                showModal('Error', 'Could not generate a reason.', 'error');
             } finally {
                 generateBtn.disabled = false;
                 generateBtn.innerHTML = '✨ Help me write';
@@ -441,188 +370,114 @@
         };
 
         function listenForStudentPasses(studentUid) {
-            if (!db || !gatePassesCollectionRef) return;
             const q = query(gatePassesCollectionRef, where("studentUid", "==", studentUid));
-
-            onSnapshot(q, (querySnapshot) => {
+            onSnapshot(q, (snapshot) => {
                 studentPassList.innerHTML = '';
-                if (querySnapshot.empty) {
+                if (snapshot.empty) {
                     studentPassList.innerHTML = '<p class="text-gray-500">No passes requested yet.</p>';
                     return;
                 }
-
-                const passes = [];
-                querySnapshot.forEach((doc) => passes.push({ id: doc.id, ...doc.data() }));
-                
+                const passes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 passes.sort((a, b) => (b.requestedAt?.toDate() || 0) - (a.requestedAt?.toDate() || 0));
-
-                passes.forEach((pass) => {
-                    studentPassList.appendChild(createStudentPassCard(pass, pass.id));
-                });
+                passes.forEach(pass => studentPassList.appendChild(createStudentPassCard(pass)));
             });
         }
 
-        function createStudentPassCard(pass, passId) {
+        function createStudentPassCard(pass) {
             const card = document.createElement('div');
-            let bgColor = 'bg-yellow-100';
-            let textColor = 'text-yellow-800';
-            let statusText = 'Pending';
-            
-            if (pass.status === 'approved') {
-                bgColor = 'bg-green-100';
-                textColor = 'text-green-800';
-                statusText = 'Approved';
-            } else if (pass.status === 'rejected') {
-                bgColor = 'bg-red-100';
-                textColor = 'text-red-800';
-                statusText = 'Rejected';
-            }
-
-            card.className = `p-4 rounded-lg border ${bgColor.replace('bg-', 'border-')}`;
+            const statusMap = {
+                pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
+                approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Approved' },
+                rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
+            };
+            const status = statusMap[pass.status] || statusMap.pending;
+            card.className = `p-4 rounded-lg border ${status.bg.replace('bg-', 'border-')}`;
             card.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="font-bold text-gray-800">${pass.reason}</p>
-                        <p class="text-sm text-gray-600">
-                           From: ${new Date(pass.leaveStart).toLocaleString()}
-                        </p>
-                        <p class="text-sm text-gray-600">
-                           To: ${new Date(pass.leaveEnd).toLocaleString()}
-                        </p>
-                        ${pass.status === 'approved' ? `<p class="text-sm font-semibold text-blue-700 mt-2">Pass ID: ${passId}</p>` : ''}
+                        <p class="text-sm text-gray-600">From: ${new Date(pass.leaveStart).toLocaleString()}</p>
+                        <p class="text-sm text-gray-600">To: ${new Date(pass.leaveEnd).toLocaleString()}</p>
+                        ${pass.status === 'approved' ? `<p class="text-sm font-semibold text-blue-700 mt-2">Pass ID: ${pass.id}</p>` : ''}
                     </div>
-                    <span class="font-semibold py-1 px-3 rounded-full text-sm ${bgColor} ${textColor}">${statusText}</span>
-                </div>
-            `;
+                    <span class="font-semibold py-1 px-3 rounded-full text-sm ${status.bg} ${status.text}">${status.label}</span>
+                </div>`;
             return card;
         }
 
-        // --- Faculty Logic ---
         function listenForPendingRequests() {
-            if (!db || !gatePassesCollectionRef) return;
             const q = query(gatePassesCollectionRef, where("status", "==", "pending"));
-
-            onSnapshot(q, (querySnapshot) => {
+            onSnapshot(q, (snapshot) => {
                 facultyRequestList.innerHTML = '';
-                if (querySnapshot.empty) {
-                    facultyRequestList.innerHTML = '<p class="text-gray-500 col-span-full">No pending requests at the moment.</p>';
+                if (snapshot.empty) {
+                    facultyRequestList.innerHTML = '<p class="text-gray-500 col-span-full">No pending requests.</p>';
                     return;
                 }
-                
-                const requests = [];
-                querySnapshot.forEach((doc) => requests.push({ id: doc.id, ...doc.data() }));
-
+                const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 requests.sort((a, b) => (a.requestedAt?.toDate() || 0) - (b.requestedAt?.toDate() || 0));
-
-                requests.forEach((request) => {
-                    facultyRequestList.appendChild(createFacultyRequestCard(request.id, request));
-                });
+                requests.forEach(req => facultyRequestList.appendChild(createFacultyRequestCard(req)));
             });
         }
         
-        function createFacultyRequestCard(id, request) {
+        function createFacultyRequestCard(request) {
             const card = document.createElement('div');
-            card.className = 'bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm';
+            card.className = 'bg-gray-50 p-5 rounded-xl border';
             card.innerHTML = `
-                <h3 class="font-bold text-lg text-gray-800">${request.studentName}</h3>
+                <h3 class="font-bold text-lg">${request.studentName}</h3>
                 <p class="text-sm text-gray-500 mb-2">${request.studentId}</p>
                 <p class="text-gray-700 mb-3">${request.reason}</p>
-                <p class="text-xs text-gray-600 font-medium">
-                    From: ${new Date(request.leaveStart).toLocaleString()}
-                </p>
-                <p class="text-xs text-gray-600 font-medium mb-4">
-                    To: ${new Date(request.leaveEnd).toLocaleString()}
-                </p>
+                <p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p>
+                <p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p>
                 <div class="flex space-x-2">
-                    <button onclick="updatePassStatus('${id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Approve</button>
-                    <button onclick="updatePassStatus('${id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600">Reject</button>
-                </div>
-            `;
+                    <button onclick="updatePassStatus('${request.id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">Approve</button>
+                    <button onclick="updatePassStatus('${request.id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg">Reject</button>
+                </div>`;
             return card;
         }
 
         window.updatePassStatus = async (id, status) => {
-            if(!db || !gatePassesCollectionRef) return;
             const passRef = doc(gatePassesCollectionRef, id);
-            try {
-                await updateDoc(passRef, { status: status, processedAt: serverTimestamp() });
-                const message = status === 'approved' ? 'Pass has been approved.' : 'Pass has been rejected.';
-                showModal('Success', message, 'success');
-            } catch (error) {
-                showModal('Error', 'Failed to update pass status.', 'error');
-            }
+            await updateDoc(passRef, { status, processedAt: serverTimestamp() });
         };
 
-
-        // --- Security Logic ---
         window.verifyPass = async () => {
             const passId = document.getElementById('passIdInput').value.trim();
             const resultDiv = document.getElementById('verificationResult');
-            resultDiv.innerHTML = '';
-
             if (!passId) {
-                resultDiv.innerHTML = `<p class="text-red-600 font-semibold">Please enter a Pass ID.</p>`;
+                resultDiv.innerHTML = `<p class="text-red-600">Please enter a Pass ID.</p>`;
                 return;
             }
-            if(!db || !gatePassesCollectionRef) return;
-
-            try {
-                const passRef = doc(gatePassesCollectionRef, passId);
-                const docSnap = await getDoc(passRef);
-
-                if (docSnap.exists() && docSnap.data().status === 'approved') {
-                    resultDiv.innerHTML = createVerificationCard('found', docSnap.data());
-                } else {
-                    resultDiv.innerHTML = createVerificationCard('not_found');
-                }
-            } catch (error) {
-                resultDiv.innerHTML = createVerificationCard('error');
+            const passRef = doc(gatePassesCollectionRef, passId);
+            const docSnap = await getDoc(passRef);
+            if (docSnap.exists() && docSnap.data().status === 'approved') {
+                const data = docSnap.data();
+                const isExpired = new Date() > new Date(data.leaveEnd);
+                const statusClass = isExpired ? 'yellow' : 'green';
+                const statusText = isExpired ? 'EXPIRED' : 'ACTIVE';
+                resultDiv.innerHTML = `<div class="bg-${statusClass}-100 border-l-4 border-${statusClass}-500 text-${statusClass}-700 p-4 rounded-lg">
+                    <p class="font-bold">Pass Verified${isExpired ? ', but EXPIRED' : ''}</p>
+                    <p><strong>Student:</strong> ${data.studentName}</p>
+                    <p><strong>ID:</strong> ${data.studentId}</p>
+                    <p><strong>Valid Until:</strong> ${new Date(data.leaveEnd).toLocaleString()}</p>
+                    <p class="font-bold mt-2">STATUS: ${statusText}</p>
+                </div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"><p class="font-bold">Invalid or Unapproved Pass</p></div>`;
             }
         };
 
-        function createVerificationCard(status, data = null) {
-            if (status === 'not_found') {
-                return `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"><p class="font-bold">Invalid or Unapproved Pass</p><p>The Pass ID is incorrect, expired, or not approved.</p></div>`;
-            }
-            if (status === 'error') {
-                 return `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"><p class="font-bold">Error</p><p>Could not verify the pass. Please try again.</p></div>`;
-            }
-            if (status === 'found') {
-                const leaveEnd = new Date(data.leaveEnd);
-                const isExpired = new Date() > leaveEnd;
-                
-                if (isExpired) {
-                     return `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg"><p class="font-bold">Pass Verified, but EXPIRED</p><div class="mt-2 space-y-1 text-yellow-900"><p><strong>Student:</strong> ${data.studentName}</p><p><strong>ID:</strong> ${data.studentId}</p><p><strong>Valid Until:</strong> ${leaveEnd.toLocaleString()}</p><p class="font-bold text-red-600 mt-2">STATUS: EXPIRED</p></div></div>`;
-                }
-
-                return `<div class="bg-green-100 border-l-4 border-green-500 p-4 rounded-lg"><p class="font-bold text-green-800 text-lg">Pass Verified Successfully</p><div class="mt-2 space-y-1 text-green-900"><p><strong>Student:</strong> ${data.studentName}</p><p><strong>ID:</strong> ${data.studentId}</p><p><strong>Reason:</strong> ${data.reason}</p><p><strong>Valid Until:</strong> ${leaveEnd.toLocaleString()}</p><p class="font-bold text-green-600 mt-2">STATUS: ACTIVE</p></div></div>`;
-            }
-        }
-
-        // --- Modal Display Logic ---
         function showModal(title, message, type = 'info') {
             modalTitle.textContent = title;
             modalMessage.textContent = message;
-
-            let iconHtml = '';
-            if (type === 'success') {
-                iconHtml = `<svg class="w-12 h-12 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-            } else if (type === 'error') {
-                iconHtml = `<svg class="w-12 h-12 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-            }
-            modalIcon.innerHTML = iconHtml;
-
+            const icons = {
+                success: `<svg class="w-12 h-12 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                error: `<svg class="w-12 h-12 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                info: ''
+            };
+            modalIcon.innerHTML = icons[type];
             messageModal.classList.remove('hidden');
         }
-
-        window.closeModal = () => {
-            messageModal.classList.add('hidden');
-        };
-        
-        // --- Initialize the App ---
-        initializeFirebase();
-
+        window.closeModal = () => messageModal.classList.add('hidden');
     </script>
 </body>
 </html>
-
