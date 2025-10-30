@@ -15,7 +15,6 @@
 </head>
 <body class="bg-gray-100 antialiased">
 
-    <!-- Main Application Container -->
     <div id="app" class="min-h-screen flex flex-col items-center justify-center p-4">
         <div id="loadingScreen" class="flex flex-col items-center justify-center text-center">
             <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900"></div>
@@ -44,17 +43,18 @@
                         <option value="student">Student</option>
                         <option value="faculty">Faculty</option>
                         <option value="security">Security</option>
+                        <option value="principal">Principal</option>
                     </select>
-                    <div id="studentInfo" class="space-y-4">
-                         <input type="text" id="signupStudentName" placeholder="Full Name" class="w-full p-3 border rounded-lg">
-                         <input type="text" id="signupStudentId" placeholder="Student ID" class="w-full p-3 border rounded-lg">
+                    
+                    <div id="nameInfo" class="space-y-4"> <input type="text" id="signupStudentName" placeholder="Full Name" class="w-full p-3 border rounded-lg">
+                    </div>
+                    <div id="studentIdInfo" class="space-y-4"> <input type="text" id="signupStudentId" placeholder="Student ID" class="w-full p-3 border rounded-lg">
                     </div>
                     <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg shadow-md">Create Account</button>
                 </form>
             </div>
         </div>
 
-        <!-- Student Dashboard -->
         <div id="studentDashboard" class="hidden w-full max-w-5xl mx-auto">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold">Student Dashboard</h1>
@@ -88,19 +88,48 @@
             </div>
         </div>
 
-        <!-- Faculty Dashboard -->
         <div id="facultyDashboard" class="hidden w-full max-w-6xl mx-auto">
-             <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold">Faculty Dashboard</h1>
                 <button onclick="handleLogout()" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg">Sign Out</button>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-lg">
-                 <h2 class="text-xl font-bold mb-4">Pending Requests</h2>
-                 <div id="facultyRequestList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div class="flex border-b mb-6">
+                <button id="studentRequestsTab" onclick="switchFacultyTab('studentRequests')" class="flex-1 py-2 font-semibold border-b-2 tab-active">Student Requests</button>
+                <button id="myLeaveTab" onclick="switchFacultyTab('myLeave')" class="flex-1 py-2 font-semibold border-b-2 border-transparent">My Leave</button>
+            </div>
+            <div id="studentRequestsView">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Pending Student Gate Pass Requests</h2>
+                    <div id="facultyRequestList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        </div>
+                </div>
+            </div>
+            <div id="myLeaveView" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1 bg-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">New Leave Request</h2>
+                        <form id="facultyLeaveForm" class="space-y-4">
+                            <textarea id="facultyReason" placeholder="Reason for leave" rows="4" class="w-full p-3 border rounded-lg" required></textarea>
+                            <div>
+                                <label class="font-semibold">Leave Start:</label>
+                                <input type="datetime-local" id="facultyLeaveStart" class="w-full p-3 border rounded-lg" required>
+                            </div>
+                            <div>
+                                <label class="font-semibold">Leave End:</label>
+                                <input type="datetime-local" id="facultyLeaveEnd" class="w-full p-3 border rounded-lg" required>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md">Submit Leave Request</button>
+                        </form>
+                    </div>
+                    <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">My Leave History</h2>
+                        <div id="facultyLeaveList" class="space-y-4 max-h-[32rem] overflow-y-auto">
+                            </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Security Dashboard -->
         <div id="securityDashboard" class="hidden w-full max-w-md mx-auto">
              <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold">Security Verification</h1>
@@ -116,7 +145,19 @@
             </div>
         </div>
 
-        <!-- Modal -->
+        <div id="principalDashboard" class="hidden w-full max-w-6xl mx-auto">
+             <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Principal Dashboard</h1>
+                <button onclick="handleLogout()" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg">Sign Out</button>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                 <h2 class="text-xl font-bold text-gray-800 mb-4">Pending Faculty Leave Requests</h2>
+                 <div id="principalRequestList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                     <p class="text-gray-500 col-span-full">No pending requests at the moment.</p>
+                 </div>
+            </div>
+        </div>
+
         <div id="messageModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">
             <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm text-center">
                 <div id="modalIcon" class="mx-auto mb-4"></div>
@@ -138,8 +179,9 @@
         const studentDashboard = document.getElementById('studentDashboard');
         const facultyDashboard = document.getElementById('facultyDashboard');
         const securityDashboard = document.getElementById('securityDashboard');
+        const principalDashboard = document.getElementById('principalDashboard');
         
-        let app, db, auth, usersCollectionRef, gatePassesCollectionRef;
+        let app, db, auth, usersCollectionRef, gatePassesCollectionRef, facultyLeavesCollectionRef;
 
         // --- Main App Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -153,7 +195,7 @@
                   apiKey: "AIzaSyDtXzJWWoOi8MX0D8IpgF_m4WdZmQezspw",
                   authDomain: "gatepasssystem-a2cff.firebaseapp.com",
                   projectId: "gatepasssystem-a2cff",
-                  storageBucket: "gatepasssystem-a2cff.appspot.com", 
+                  storageBucket: "gatepasssystem-a2cff.appspot.com",  
                   messagingSenderId: "383143201131",
                   appId: "1:383143201131:web:ea76f3b497a1366612e42e",
                   measurementId: "G-V0R3FNC4F9"
@@ -165,6 +207,7 @@
                 
                 usersCollectionRef = collection(db, "users");
                 gatePassesCollectionRef = collection(db, "gatepasses");
+                facultyLeavesCollectionRef = collection(db, "facultyLeaves");
                 
                 console.log("STEP 2: Firebase has been initialized successfully. Setting up authentication listener.");
                 setupAuthListener();
@@ -212,6 +255,7 @@
             studentDashboard.classList.add('hidden');
             facultyDashboard.classList.add('hidden');
             securityDashboard.classList.add('hidden');
+            principalDashboard.classList.add('hidden');
 
             if (userData.role === 'student') {
                 document.getElementById('studentName').value = userData.name;
@@ -221,8 +265,12 @@
             } else if (userData.role === 'faculty') {
                 facultyDashboard.classList.remove('hidden');
                 listenForPendingRequests();
+                listenForMyLeave(auth.currentUser.uid);
             } else if (userData.role === 'security') {
                 securityDashboard.classList.remove('hidden');
+            } else if (userData.role === 'principal') {
+                principalDashboard.classList.remove('hidden');
+                listenForPendingFacultyLeaves();
             }
         }
 
@@ -233,6 +281,7 @@
             studentDashboard.classList.add('hidden');
             facultyDashboard.classList.add('hidden');
             securityDashboard.classList.add('hidden');
+            principalDashboard.classList.add('hidden');
         }
         
         // --- All other functions (event listeners, UI updates, etc.) ---
@@ -255,9 +304,34 @@
             }
         };
         
+        // START: MODIFIED JAVASCRIPT FOR BUG FIX
         document.getElementById('userRole').addEventListener('change', (e) => {
-            document.getElementById('studentInfo').style.display = e.target.value === 'student' ? 'block' : 'none';
+            const role = e.target.value;
+            const nameDiv = document.getElementById('nameInfo');
+            const studentIdDiv = document.getElementById('studentIdInfo');
+
+            // Show name field for students, faculty, and principals
+            if (role === 'student' || role === 'faculty' || role === 'principal') {
+                nameDiv.style.display = 'block';
+            } else {
+                nameDiv.style.display = 'none';
+            }
+
+            // Show Student ID field ONLY for students
+            if (role === 'student') {
+                studentIdDiv.style.display = 'block';
+            } else {
+                studentIdDiv.style.display = 'none';
+            }
         });
+
+        // Also run this logic once on page load for the default "student" role
+        document.addEventListener('DOMContentLoaded', () => {
+             document.getElementById('nameInfo').style.display = 'block';
+             document.getElementById('studentIdInfo').style.display = 'block';
+        });
+        // END: MODIFIED JAVASCRIPT FOR BUG FIX
+
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -281,6 +355,12 @@
             if(role === 'student' && (!name || !studentId)) {
                 return showModal('Error', 'Please fill in your Full Name and Student ID.', 'error');
             }
+            if(role === 'faculty' && !name) {
+                return showModal('Error', 'Please fill in your Full Name.', 'error');
+            }
+            if(role === 'principal' && !name) {
+                return showModal('Error', 'Please fill in your Full Name.', 'error');
+            }
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const userDoc = { email, role, name: name || null, studentId: studentId || null };
@@ -294,6 +374,27 @@
             await signOut(auth);
         };
 
+        // --- Faculty Tab Switching ---
+        window.switchFacultyTab = (tab) => {
+            const studentView = document.getElementById('studentRequestsView');
+            const leaveView = document.getElementById('myLeaveView');
+            const studentTab = document.getElementById('studentRequestsTab');
+            const leaveTab = document.getElementById('myLeaveTab');
+
+            if (tab === 'studentRequests') {
+                studentView.classList.remove('hidden');
+                leaveView.classList.add('hidden');
+                studentTab.classList.add('tab-active');
+                leaveTab.classList.remove('tab-active');
+            } else {
+                studentView.classList.add('hidden');
+                leaveView.classList.remove('hidden');
+                studentTab.classList.remove('tab-active');
+                leaveTab.classList.add('tab-active');
+            }
+        };
+
+        // --- Student Logic ---
         document.getElementById('gatePassForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
@@ -308,7 +409,9 @@
                     requestedAt: serverTimestamp(),
                 });
                 showModal('Success', 'Request submitted!', 'success');
-                e.target.reset();
+                document.getElementById('reason').value = '';
+                document.getElementById('leaveStart').value = '';
+                document.getElementById('leaveEnd').value = '';
             } catch (error) {
                 showModal('Error', 'Failed to submit request.', 'error');
             }
@@ -333,13 +436,13 @@
             });
         }
 
-        function createStudentPassCard(pass) {
+        function createStudentPassCard(pass) { 
             const card = document.createElement('div');
-            // Card creation logic remains the same
             const statusMap={pending:{bg:"bg-yellow-100",text:"text-yellow-800",label:"Pending"},approved:{bg:"bg-green-100",text:"text-green-800",label:"Approved"},rejected:{bg:"bg-red-100",text:"text-red-800",label:"Rejected"}},status=statusMap[pass.status]||statusMap.pending;card.className=`p-4 rounded-lg border ${status.bg.replace("bg-","border-")}`;card.innerHTML=`<div class="flex justify-between items-start"><div><p class="font-bold text-gray-800">${pass.reason}</p><p class="text-sm text-gray-600">From: ${new Date(pass.leaveStart).toLocaleString()}</p><p class="text-sm text-gray-600">To: ${new Date(pass.leaveEnd).toLocaleString()}</p>${pass.status==="approved"?`<p class="text-sm font-semibold text-blue-700 mt-2">Pass ID: ${pass.id}</p>`:""}</div><span class="font-semibold py-1 px-3 rounded-full text-sm ${status.bg} ${status.text}">${status.label}</span></div>`;
             return card;
         }
 
+        // --- Faculty Logic (For Student Passes) ---
         function listenForPendingRequests() {
             const q = query(gatePassesCollectionRef, where("status", "==", "pending"));
             onSnapshot(q, (snapshot) => {
@@ -357,7 +460,6 @@
         
         function createFacultyRequestCard(request) {
             const card = document.createElement('div');
-            // Card creation logic remains the same
             card.className="bg-gray-50 p-5 rounded-xl border";card.innerHTML=`<h3 class="font-bold text-lg">${request.studentName}</h3><p class="text-sm text-gray-500 mb-2">${request.studentId}</p><p class="text-gray-700 mb-3">${request.reason}</p><p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p><p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p><div class="flex space-x-2"><button onclick="updatePassStatus('${request.id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">Approve</button><button onclick="updatePassStatus('${request.id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg">Reject</button></div>`;
             return card;
         }
@@ -367,11 +469,91 @@
             await updateDoc(passRef, { status, processedAt: serverTimestamp() });
         };
 
+        // --- Faculty Logic (For Their Own Leave) ---
+        document.getElementById('facultyLeaveForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userDocRef = doc(usersCollectionRef, auth.currentUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            const facultyName = userDocSnap.exists() ? userDocSnap.data().name : "Faculty Member";
+
+            try {
+                await addDoc(facultyLeavesCollectionRef, {
+                    facultyName: facultyName,
+                    facultyUid: auth.currentUser.uid,
+                    reason: document.getElementById('facultyReason').value,
+                    leaveStart: document.getElementById('facultyLeaveStart').value,
+                    leaveEnd: document.getElementById('facultyLeaveEnd').value,
+                    status: 'pending',
+                    requestedAt: serverTimestamp(),
+                });
+                showModal('Success', 'Your leave request has been submitted!', 'success');
+                document.getElementById('facultyReason').value = '';
+                document.getElementById('facultyLeaveStart').value = '';
+                document.getElementById('facultyLeaveEnd').value = '';
+            } catch (error) {
+                showModal('Error', 'Failed to submit leave request.', 'error');
+            }
+        });
+
+        function listenForMyLeave(facultyUid) {
+            const q = query(facultyLeavesCollectionRef, where("facultyUid", "==", facultyUid));
+            onSnapshot(q, (snapshot) => {
+                const facultyLeaveList = document.getElementById('facultyLeaveList');
+                facultyLeaveList.innerHTML = '';
+                if (snapshot.empty) {
+                    facultyLeaveList.innerHTML = '<p class="text-gray-500">No leave requested yet.</p>';
+                    return;
+                }
+                const leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                leaves.sort((a, b) => (b.requestedAt?.toDate() || 0) - (a.requestedAt?.toDate() || 0));
+                leaves.forEach(leave => facultyLeaveList.appendChild(createStudentPassCard(leave)));
+            });
+        }
+
+
+        // --- Security Logic ---
         window.verifyPass = async () => {
-            // Verification logic remains the same
             const passId=document.getElementById("passIdInput").value.trim(),resultDiv=document.getElementById("verificationResult");if(!passId)return void(resultDiv.innerHTML='<p class="text-red-600">Please enter a Pass ID.</p>');const passRef=doc(gatePassesCollectionRef,passId),docSnap=await getDoc(passRef);docSnap.exists()&&"approved"===docSnap.data().status?(()=>{const e=docSnap.data(),t=new Date>new Date(e.leaveEnd),a=t?"yellow":"green",s=t?"EXPIRED":"ACTIVE";resultDiv.innerHTML=`<div class="bg-${a}-100 border-l-4 border-${a}-500 text-${a}-700 p-4 rounded-lg"><p class="font-bold">Pass Verified${t?", but EXPIRED":""}</p><p><strong>Student:</strong> ${e.studentName}</p><p><strong>ID:</strong> ${e.studentId}</p><p><strong>Valid Until:</strong> ${new Date(e.leaveEnd).toLocaleString()}</p><p class="font-bold mt-2">STATUS: ${s}</p></div>`})():resultDiv.innerHTML='<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"><p class="font-bold">Invalid or Unapproved Pass</p></div>'
         };
 
+        // --- Principal Logic ---
+        function listenForPendingFacultyLeaves() {
+            const q = query(facultyLeavesCollectionRef, where("status", "==", "pending"));
+            onSnapshot(q, (snapshot) => {
+                const principalRequestList = document.getElementById('principalRequestList');
+                principalRequestList.innerHTML = '';
+                if (snapshot.empty) {
+                    principalRequestList.innerHTML = '<p class="text-gray-500 col-span-full">No pending requests.</p>';
+                    return;
+                }
+                const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                requests.sort((a, b) => (a.requestedAt?.toDate() || 0) - (b.requestedAt?.toDate() || 0));
+                requests.forEach(req => principalRequestList.appendChild(createPrincipalRequestCard(req)));
+            });
+        }
+
+        function createPrincipalRequestCard(request) {
+            const card = document.createElement('div');
+            card.className="bg-gray-50 p-5 rounded-xl border";
+            card.innerHTML=`
+                <h3 class="font-bold text-lg">${request.facultyName}</h3>
+                <p class="text-gray-700 mb-3">${request.reason}</p>
+                <p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p>
+                <p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p>
+                <div class="flex space-x-2">
+                    <button onclick="updateFacultyLeaveStatus('${request.id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">Approve</button>
+                    <button onclick="updateFacultyLeaveStatus('${request.id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg">Reject</button>
+                </div>`;
+            return card;
+        }
+
+        window.updateFacultyLeaveStatus = async (id, status) => {
+            const passRef = doc(facultyLeavesCollectionRef, id);
+            await updateDoc(passRef, { status, processedAt: serverTimestamp() });
+        };
+
+
+        // --- Modal Logic ---
         function showModal(title, message, type = 'info') {
             const modalTitle = document.getElementById('modalTitle');
             const modalMessage = document.getElementById('modalMessage');
@@ -390,4 +572,3 @@
     </script>
 </body>
 </html>
-
