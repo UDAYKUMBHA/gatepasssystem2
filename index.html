@@ -220,11 +220,11 @@
 
 
     <script type="module">
+        // --- NOTICE: 'getFunctions' and 'httpsCallable' have been REMOVED ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
-
+        
         // This listener ensures your HTML is fully loaded before any JavaScript runs
         document.addEventListener('DOMContentLoaded', () => {
 
@@ -237,12 +237,15 @@
             const principalDashboard = document.getElementById('principalDashboard');
             
             // --- Global Firebase Variables ---
-            let app, db, auth, functions, usersCollectionRef, gatePassesCollectionRef, facultyLeavesCollectionRef;
+            // --- NOTICE: 'functions' has been REMOVED ---
+            let app, db, auth, usersCollectionRef, gatePassesCollectionRef, facultyLeavesCollectionRef;
             let currentUserData = null; 
 
             // --- Main App Initialization ---
             function initializeFirebase() {
                 try {
+                    // --- IMPORTANT: This config MUST be for your NEW 'gatepass-final' project ---
+                    // --- OR your old 'gatepasssystem-a2cff' project. Make sure it's the one you want to use.
                     const firebaseConfig = {
                       apiKey: "AIzaSyDtXzJWWoOi8MX0D8IpgF_m4WdZmQezspw", // Your API Key
                       authDomain: "gatepasssystem-a2cff.firebaseapp.com",
@@ -256,7 +259,6 @@
                     app = initializeApp(firebaseConfig);
                     db = getFirestore(app);
                     auth = getAuth(app);
-                    functions = getFunctions(app); // Connect to your Cloud Functions
                     
                     usersCollectionRef = collection(db, "users");
                     gatePassesCollectionRef = collection(db, "gatepasses");
@@ -286,8 +288,10 @@
                                 showDashboard(currentUserData);
                             } else {
                                 console.warn("User doc not found, signing out.");
-                                await signOut(auth); 
-                                showAuthScreen();
+                                // This might happen if you deleted the 'users' entry
+                                // We'll log them in anyway but show an error
+                                 showModal('Login Error', 'User account found, but no profile data. Please contact admin.', 'error');
+                                 showAuthScreen(); // Or force sign out: await signOut(auth); 
                             }
                         } else {
                             console.log("No user signed in.");
@@ -301,7 +305,7 @@
                 });
             }
             
-            // --- UI Switching Logic ---
+            // --- UI Switching Logic (Unchanged) ---
             function showDashboard(userData) {
                 console.log(`STEP 4: Showing dashboard for role: ${userData.role}`);
                 [loadingScreen, authScreen, studentDashboard, facultyDashboard, securityDashboard, principalDashboard].forEach(el => el.classList.add('hidden'));
@@ -349,7 +353,7 @@
                 authScreen.classList.remove('hidden');
             }
             
-            // --- Auth Form Event Listeners ---
+            // --- Auth Form Event Listeners (Unchanged) ---
             window.switchAuthTab = (tab) => {
                 const loginForm = document.getElementById('loginForm'); const signupForm = document.getElementById('signupForm'); const loginTab = document.getElementById('loginTab'); const signupTab = document.getElementById('signupTab');
                 if (tab === 'login') {
@@ -405,7 +409,7 @@
                 }
             });
 
-            // --- Secure Sign-up Logic (Calls Cloud Function) ---
+            // --- THIS IS THE OLD, SIMPLE SIGN-UP LOGIC (RESTORED) ---
             document.getElementById('signupForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('signupEmail').value;
@@ -416,37 +420,40 @@
                 const studentId = document.getElementById('signupStudentId').value;
                 const facultyId = document.getElementById('signupFacultyId').value;
 
-                let dataToSend = { email, password, role, name };
+                let userDoc = { email, role, name: name || null };
 
+                // Client-side validation
                 if (role === 'student') {
                     if (!name || !studentId || !department) {
                         return showModal('Error', 'Please fill in Full Name, Student ID (PRN), and select Department.', 'error');
                     }
-                    dataToSend = { ...dataToSend, studentId, department };
+                    userDoc = { ...userDoc, studentId, department };
                 } else if (['faculty', 'hod', 'cc', 'pcg'].includes(role)) {
                     if (!name || !facultyId || !department) {
                         return showModal('Error', 'Please fill in Full Name, Faculty ID, and select Department.', 'error');
                     }
-                    dataToSend = { ...dataToSend, facultyId, department };
+                    userDoc = { ...userDoc, facultyId, department };
                 } else if (['principal', 'security'].includes(role)) {
                     if (!name) {
                         return showModal('Error', 'Please fill in Full Name.', 'error');
                     }
                 }
 
-                // This is the name of your Cloud Function
-                const createSecureUserAccount = httpsCallable(functions, 'createSecureUserAccount');
                 const signupButton = e.target.querySelector('button[type="submit"]');
                 try {
                     signupButton.disabled = true;
-                    signupButton.textContent = "Verifying Invite...";
+                    signupButton.textContent = "Creating Account...";
 
-                    const result = await createSecureUserAccount(dataToSend);
+                    // 1. Create the user in Firebase Auth
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
 
-                    showModal('Success!', result.data.message, 'success');
-                    e.target.reset();
-                    switchAuthTab('login');
+                    // 2. Create the user's document in Firestore
+                    await setDoc(doc(usersCollectionRef, user.uid), userDoc);
 
+                    showModal('Success!', 'Account created successfully. You will now be logged in.', 'success');
+                    // onAuthStateChanged will handle the login and dashboard redirect
+                
                 } catch (error) {
                     console.error("Sign up failed:", error);
                     showModal('Sign Up Failed', error.message, 'error');
@@ -457,7 +464,20 @@
             });
 
 
-            // --- Student Logic (NEW PARALLEL SUBMIT) ---
+            // --- All other functions (Student, Faculty, Approval, etc.) are UNCHANGED ---
+            // (They are all correct)
+
+            window.handleLogout = async () => { await signOut(auth); };
+            
+            window.switchFacultyTab = (tab) => {
+                const studentView = document.getElementById('studentRequestsView'); const leaveView = document.getElementById('myLeaveView'); const studentTab = document.getElementById('studentRequestsTab'); const leaveTab = document.getElementById('myLeaveTab');
+                if (tab === 'studentRequests') {
+                    studentView.classList.remove('hidden'); leaveView.classList.add('hidden'); studentTab.classList.add('tab-active'); leaveTab.classList.remove('tab-active');
+                } else {
+                    studentView.classList.add('hidden'); leaveView.classList.remove('hidden'); studentTab.classList.remove('tab-active'); leaveTab.classList.add('tab-active');
+                }
+            };
+            
             document.getElementById('gatePassForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 try {
@@ -470,17 +490,13 @@
                         leaveStart: document.getElementById('leaveStart').value,
                         leaveEnd: document.getElementById('leaveEnd').value,
                         requestedAt: serverTimestamp(),
-                        
-                        // NEW PARALLEL APPROVAL STATUSES
-                        status: 'pending_approval', // Main status
+                        status: 'pending_approval', 
                         pcg_approval: 'pending',
                         cc_approval: 'pending',
                         hod_approval: 'pending'
                     });
                     showModal('Success', 'Request submitted for approval from PCG, CC, and HOD.', 'success');
-                    document.getElementById('reason').value = '';
-                    document.getElementById('leaveStart').value = '';
-                    document.getElementById('leaveEnd').value = '';
+                    e.target.reset();
                 } catch (error) {
                     showModal('Error', 'Failed to submit request.', 'error');
                 }
@@ -503,7 +519,6 @@
                 });
             }
 
-            // --- Student Pass Card (NEW PARALLEL STATUS) ---
             function createStudentPassCard(pass) { 
                 const card = document.createElement('div');
                 const statusMap={
@@ -512,7 +527,6 @@
                     rejected:{bg:"bg-red-100",text:"text-red-800",label:"Rejected"}
                 };
                 const status = statusMap[pass.status] || statusMap.pending_approval; 
-                
                 card.className=`p-4 rounded-lg border ${status.bg.replace("bg-","border-")}`;
                 card.innerHTML=`
                     <div class="flex justify-between items-start">
@@ -528,7 +542,6 @@
                 return card;
             }
 
-            // --- Approval Logic (NEW PARALLEL LISTENERS) ---
             function listenForPcgRequests(department) {
                 const q = query(gatePassesCollectionRef, 
                     where("department", "==", department), 
@@ -589,7 +602,6 @@
                 });
             }
             
-            // --- Approval Card (NEW "SCOREBOARD") ---
             function createApprovalCard(request, roleContext) {
                 const card = document.createElement('div');
                 card.className="bg-gray-50 p-5 rounded-xl border";
@@ -617,7 +629,6 @@
                 return card;
             }
 
-            // --- Update Status (NEW PARALLEL LOGIC) ---
             window.updateGatePassStatus = async (id, action, roleContext) => {
                 const passRef = doc(gatePassesCollectionRef, id);
                 let updateData = { processedAt: serverTimestamp() };
@@ -672,8 +683,6 @@
                 }
             };
 
-
-            // --- Faculty Logic (For Their Own Leave) ---
             document.getElementById('facultyLeaveForm').addEventListener('submit', async (e) => {
                 e.preventDefault(); 
                 const userDocRef = doc(usersCollectionRef, auth.currentUser.uid); 
@@ -737,7 +746,6 @@
                 return card;
             }
 
-            // --- HOD Logic (For Faculty Leaves) ---
             function listenForHodFacultyRequests(department) {
                 const q = query(facultyLeavesCollectionRef, where("department", "==", department), where("status", "==", "pending_hod"));
                 onSnapshot(q, (snapshot) => {
@@ -754,7 +762,6 @@
                 });
             }
 
-            // --- Security Logic ---
             window.verifyPass = async () => {
                 const passId=document.getElementById("passIdInput").value.trim(),resultDiv=document.getElementById("verificationResult");
                 if(!passId) return void(resultDiv.innerHTML='<p class="text-red-600">Please enter a Pass ID.</p>');
@@ -773,7 +780,6 @@
                 }
             };
 
-            // --- Principal Logic ---
             function listenForPrincipalFacultyLeaves() {
                 const q = query(facultyLeavesCollectionRef, where("status", "==", "pending_principal"));
                 onSnapshot(q, (snapshot) => {
