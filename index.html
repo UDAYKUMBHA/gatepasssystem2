@@ -50,7 +50,7 @@
                     <div id="nameInfo" class="space-y-4">
                          <input type="text" id="signupStudentName" placeholder="Full Name" class="w-full p-3 border rounded-lg">
                     </div>
-                    <div id="studentIdInfo" class="space-y-4">
+                    <div id="studentIdInfo" classs="space-y-4">
                          <input type="text" id="signupStudentId" placeholder="Student ID" class="w-full p-3 border rounded-lg">
                     </div>
 
@@ -181,310 +181,310 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        
-        // Import the new Functions module
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
-        
-        // --- Global DOM Elements ---
-        const loadingScreen = document.getElementById('loadingScreen');
-        const authScreen = document.getElementById('authScreen');
-        const studentDashboard = document.getElementById('studentDashboard');
-        const facultyDashboard = document.getElementById('facultyDashboard');
-        const securityDashboard = document.getElementById('securityDashboard');
-        const principalDashboard = document.getElementById('principalDashboard');
-        
-        // Add 'functions' to the list of global variables
-        let app, db, auth, functions, usersCollectionRef, gatePassesCollectionRef, facultyLeavesCollectionRef;
-
-        
+        // ** THIS IS THE FIX: Wait for the HTML to be ready before running ANY code **
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("STEP 1: DOM is fully loaded. Starting Firebase initialization.");
-            initializeFirebase();
-        });
 
-        function initializeFirebase() {
-            try {
-                const firebaseConfig = {
-                  apiKey: "AIzaSyDtXzJWWoOi8MX0D8IpgF_m4WdZmQezspw", // Use your actual API key
-                  authDomain: "gatepasssystem-a2cff.firebaseapp.com",
-                  projectId: "gatepasssystem-a2cff",
-                  storageBucket: "gatepasssystem-a2cff.appspot.com",  
-                  messagingSenderId: "383143201131",
-                  appId: "1:383143201131:web:ea76f3b497a1366612e42e",
-                  measurementId: "G-V0R3FNC4F9"
-                };
+            // --- Global DOM Elements ---
+            // (Moved INSIDE the listener)
+            const loadingScreen = document.getElementById('loadingScreen');
+            const authScreen = document.getElementById('authScreen');
+            const studentDashboard = document.getElementById('studentDashboard');
+            const facultyDashboard = document.getElementById('facultyDashboard');
+            const securityDashboard = document.getElementById('securityDashboard');
+            const principalDashboard = document.getElementById('principalDashboard');
+            
+            // --- Global Firebase Variables ---
+            let app, db, auth, functions, usersCollectionRef, gatePassesCollectionRef, facultyLeavesCollectionRef;
 
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // Initialize Functions
-                functions = getFunctions(app);
-                
-                usersCollectionRef = collection(db, "users");
-                gatePassesCollectionRef = collection(db, "gatepasses");
-                facultyLeavesCollectionRef = collection(db, "facultyLeaves");
-                
-                console.log("STEP 2: Firebase has been initialized successfully. Setting up authentication listener.");
-                setupAuthListener();
+            // --- Main App Initialization ---
+            function initializeFirebase() {
+                try {
+                    const firebaseConfig = {
+                      apiKey: "AIzaSyDtXzJWWoOi8MX0D8IpgF_m4WdZmQezspw", // Use your actual API key
+                      authDomain: "gatepasssystem-a2cff.firebaseapp.com",
+                      projectId: "gatepasssystem-a2cff",
+                      storageBucket: "gatepasssystem-a2cff.appspot.com",  
+                      messagingSenderId: "383143201131",
+                      appId: "1:383143201131:web:ea76f3b497a1366612e42e",
+                      measurementId: "G-V0R3FNC4F9"
+                    };
 
-            } catch (error) {
-                console.error("CRITICAL ERROR during Firebase init:", error);
-                showModal('Init Error', `Could not connect. ${error.message}`, 'error');
-                loadingScreen.classList.add('hidden');
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    functions = getFunctions(app);
+                    
+                    usersCollectionRef = collection(db, "users");
+                    gatePassesCollectionRef = collection(db, "gatepasses");
+                    facultyLeavesCollectionRef = collection(db, "facultyLeaves");
+                    
+                    console.log("STEP 2: Firebase has been initialized successfully. Setting up authentication listener.");
+                    setupAuthListener();
+
+                } catch (error) {
+                    console.error("CRITICAL ERROR during Firebase init:", error);
+                    showModal('Init Error', `Could not connect. ${error.message}`, 'error');
+                    loadingScreen.classList.add('hidden');
+                }
             }
-        }
-        
-        function setupAuthListener() {
-             onAuthStateChanged(auth, async (user) => {
-                console.log("STEP 3: Auth state changed. User:", user);
-                if (user) {
-                    const userDocRef = doc(usersCollectionRef, user.uid);
-                    const userDocSnap = await getDoc(userDocRef);
-                    if (userDocSnap.exists()) {
-                        console.log("User doc found:", userDocSnap.data());
-                        showDashboard(userDocSnap.data());
-                    } else {
-                        console.warn("User doc not found, signing out.");
-                        await signOut(auth); 
-                        showAuthScreen();
+            
+            // --- Auth State Logic ---
+            function setupAuthListener() {
+                 onAuthStateChanged(auth, async (user) => {
+                    console.log("STEP 3: Auth state changed. User:", user);
+                    try {
+                        if (user) {
+                            const userDocRef = doc(usersCollectionRef, user.uid);
+                            const userDocSnap = await getDoc(userDocRef);
+                            if (userDocSnap.exists()) {
+                                console.log("User doc found:", userDocSnap.data());
+                                showDashboard(userDocSnap.data());
+                            } else {
+                                console.warn("User doc not found, signing out.");
+                                await signOut(auth); 
+                                showAuthScreen();
+                            }
+                        } else {
+                            console.log("No user signed in.");
+                            showAuthScreen();
+                        }
+                    } catch (error) {
+                        console.error("Error in auth listener:", error);
+                        showAuthScreen(); // Default to login screen on error
                     }
+                });
+            }
+            
+            // --- UI Switching Logic ---
+            function showDashboard(userData) {
+                console.log(`STEP 4: Showing dashboard for role: ${userData.role}`);
+                loadingScreen.classList.add('hidden'); authScreen.classList.add('hidden'); studentDashboard.classList.add('hidden'); facultyDashboard.classList.add('hidden'); securityDashboard.classList.add('hidden'); principalDashboard.classList.add('hidden');
+                if (userData.role === 'student') {
+                    document.getElementById('studentName').value = userData.name; document.getElementById('studentId').value = userData.studentId; studentDashboard.classList.remove('hidden'); listenForStudentPasses(auth.currentUser.uid);
+                } else if (userData.role === 'faculty') {
+                    facultyDashboard.classList.remove('hidden'); listenForPendingRequests(); listenForMyLeave(auth.currentUser.uid);
+                } else if (userData.role === 'security') {
+                    securityDashboard.classList.remove('hidden');
+                } else if (userData.role === 'principal') {
+                    principalDashboard.classList.remove('hidden'); listenForPendingFacultyLeaves();
+                }
+            }
+            
+            function showAuthScreen() {
+                console.log("STEP 4: Showing auth screen.");
+                loadingScreen.classList.add('hidden'); authScreen.classList.remove('hidden'); studentDashboard.classList.add('hidden'); facultyDashboard.classList.add('hidden'); securityDashboard.classList.add('hidden'); principalDashboard.classList.add('hidden');
+            }
+            
+            // --- Auth Form Event Listeners ---
+            window.switchAuthTab = (tab) => {
+                const loginForm = document.getElementById('loginForm'); const signupForm = document.getElementById('signupForm'); const loginTab = document.getElementById('loginTab'); const signupTab = document.getElementById('signupTab');
+                if (tab === 'login') {
+                    loginForm.classList.remove('hidden'); signupForm.classList.add('hidden'); loginTab.classList.add('tab-active'); signupTab.classList.remove('tab-active');
                 } else {
-                    console.log("No user signed in.");
-                    showAuthScreen();
+                    loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); loginTab.classList.remove('tab-active'); signupTab.classList.add('tab-active');
+                }
+            };
+            
+            document.getElementById('userRole').addEventListener('change', (e) => {
+                const role = e.target.value; const nameDiv = document.getElementById('nameInfo'); const studentIdDiv = document.getElementById('studentIdInfo');
+                if (role === 'student' || role === 'faculty' || role === 'principal') { nameDiv.style.display = 'block'; } else { nameDiv.style.display = 'none'; }
+                if (role === 'student') { studentIdDiv.style.display = 'block'; } else { studentIdDiv.style.display = 'none'; }
+            });
+            
+            // Set initial visibility for the form
+            document.getElementById('nameInfo').style.display = 'block';
+            document.getElementById('studentIdInfo').style.display = 'block';
+            
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value;
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    showModal('Login Failed', error.message, 'error');
                 }
             });
-        }
-        
-        function showDashboard(userData) {
-            console.log(`STEP 4: Showing dashboard for role: ${userData.role}`);
-            loadingScreen.classList.add('hidden'); authScreen.classList.add('hidden'); studentDashboard.classList.add('hidden'); facultyDashboard.classList.add('hidden'); securityDashboard.classList.add('hidden'); principalDashboard.classList.add('hidden');
-            if (userData.role === 'student') {
-                document.getElementById('studentName').value = userData.name; document.getElementById('studentId').value = userData.studentId; studentDashboard.classList.remove('hidden'); listenForStudentPasses(auth.currentUser.uid);
-            } else if (userData.role === 'faculty') {
-                facultyDashboard.classList.remove('hidden'); listenForPendingRequests(); listenForMyLeave(auth.currentUser.uid);
-            } else if (userData.role === 'security') {
-                securityDashboard.classList.remove('hidden');
-            } else if (userData.role === 'principal') {
-                principalDashboard.classList.remove('hidden'); listenForPendingFacultyLeaves();
-            }
-        }
-        
-        function showAuthScreen() {
-            console.log("STEP 4: Showing auth screen.");
-            loadingScreen.classList.add('hidden'); authScreen.classList.remove('hidden'); studentDashboard.classList.add('hidden'); facultyDashboard.classList.add('hidden'); securityDashboard.classList.add('hidden'); principalDashboard.classList.add('hidden');
-        }
-        
-        window.switchAuthTab = (tab) => {
-            const loginForm = document.getElementById('loginForm'); const signupForm = document.getElementById('signupForm'); const loginTab = document.getElementById('loginTab'); const signupTab = document.getElementById('signupTab');
-            if (tab === 'login') {
-                loginForm.classList.remove('hidden'); signupForm.classList.add('hidden'); loginTab.classList.add('tab-active'); signupTab.classList.remove('tab-active');
-            } else {
-                loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); loginTab.classList.remove('tab-active'); signupTab.classList.add('tab-active');
-            }
-        };
-        
-        document.getElementById('userRole').addEventListener('change', (e) => {
-            const role = e.target.value; const nameDiv = document.getElementById('nameInfo'); const studentIdDiv = document.getElementById('studentIdInfo');
-            if (role === 'student' || role === 'faculty' || role === 'principal') { nameDiv.style.display = 'block'; } else { nameDiv.style.display = 'none'; }
-            if (role === 'student') { studentIdDiv.style.display = 'block'; } else { studentIdDiv.style.display = 'none'; }
-        });
-        
-        document.addEventListener('DOMContentLoaded', () => {
-             document.getElementById('nameInfo').style.display = 'block'; document.getElementById('studentIdInfo').style.display = 'block';
-        });
 
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value;
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                showModal('Login Failed', error.message, 'error');
-            }
-        });
-
-
-        // --- THIS IS THE NEW, SECURE SIGN-UP LOGIC ---
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // 1. Get all the form values
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const role = document.getElementById('userRole').value;
-            const name = document.getElementById('signupStudentName').value;
-            const studentId = document.getElementById('signupStudentId').value;
-            
-            // 2. Client-side validation
-            if (role === 'student' && (!name || !studentId)) {
-                return showModal('Error', 'Please fill in your Full Name and Student ID.', 'error');
-            }
-            if ((role === 'faculty' || role === 'principal') && !name) {
-                return showModal('Error', 'Please fill in your Full Name.', 'error');
-            }
-
-            // 3. Get a reference to our "createSecureUserAccount" Cloud Function
-            const createSecureUserAccount = httpsCallable(functions, 'createSecureUserAccount');
-
-            const signupButton = e.target.querySelector('button[type="submit"]');
-            try {
-                // 4. Show a loading state
-                signupButton.disabled = true;
-                signupButton.textContent = "Verifying Invite...";
-
-                // 5. Call the Cloud Function and send it the form data
-                const result = await createSecureUserAccount({
-                    email: email,
-                    password: password,
-                    role: role,
-                    name: name,
-                    studentId: studentId
-                });
-
-                // 6. Show the success message from the function
-                showModal('Success!', result.data.message, 'success');
+            // --- Secure Sign-up Logic (Calls Cloud Function) ---
+            document.getElementById('signupForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('signupEmail').value;
+                const password = document.getElementById('signupPassword').value;
+                const role = document.getElementById('userRole').value;
+                const name = document.getElementById('signupStudentName').value;
+                const studentId = document.getElementById('signupStudentId').value;
                 
-                e.target.reset();
-                switchAuthTab('login'); // Move to login tab
+                if (role === 'student' && (!name || !studentId)) {
+                    return showModal('Error', 'Please fill in your Full Name and Student ID.', 'error');
+                }
+                if ((role === 'faculty' || role === 'principal') && !name) {
+                    return showModal('Error', 'Please fill in your Full Name.', 'error');
+                }
 
-            } catch (error) {
-                // 7. Show the specific error from the function
-                console.error("Sign up failed:", error);
-                showModal('Sign Up Failed', error.message, 'error');
-            } finally {
-                // 8. Re-enable the button
-                signupButton.disabled = false;
-                signupButton.textContent = "Create Account";
-            }
-        });
+                const createSecureUserAccount = httpsCallable(functions, 'createSecureUserAccount');
+                const signupButton = e.target.querySelector('button[type="submit"]');
+                try {
+                    signupButton.disabled = true;
+                    signupButton.textContent = "Verifying Invite...";
 
+                    const result = await createSecureUserAccount({
+                        email: email, password: password, role: role, name: name, studentId: studentId
+                    });
 
-        // --- ALL OTHER FUNCTIONS (Logout, Student, Faculty, etc.) ---
-        // (These are all identical to the last file and do not need to change)
+                    showModal('Success!', result.data.message, 'success');
+                    e.target.reset();
+                    switchAuthTab('login');
 
-        window.handleLogout = async () => { await signOut(auth); };
-        
-        window.switchFacultyTab = (tab) => {
-            const studentView = document.getElementById('studentRequestsView'); const leaveView = document.getElementById('myLeaveView'); const studentTab = document.getElementById('studentRequestsTab'); const leaveTab = document.getElementById('myLeaveTab');
-            if (tab === 'studentRequests') {
-                studentView.classList.remove('hidden'); leaveView.classList.add('hidden'); studentTab.classList.add('tab-active'); leaveTab.classList.remove('tab-active');
-            } else {
-                studentView.classList.add('hidden'); leaveView.classList.remove('hidden'); studentTab.classList.remove('tab-active'); leaveTab.classList.add('tab-active');
-            }
-        };
-        
-        document.getElementById('gatePassForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await addDoc(gatePassesCollectionRef, {
-                    studentName: document.getElementById('studentName').value, studentId: document.getElementById('studentId').value, studentUid: auth.currentUser.uid,
-                    reason: document.getElementById('reason').value, leaveStart: document.getElementById('leaveStart').value, leaveEnd: document.getElementById('leaveEnd').value,
-                    status: 'pending', requestedAt: serverTimestamp(),
-                });
-                showModal('Success', 'Request submitted!', 'success');
-                document.getElementById('reason').value = ''; document.getElementById('leaveStart').value = ''; document.getElementById('leaveEnd').value = '';
-            } catch (error) { showModal('Error', 'Failed to submit request.', 'error'); }
-        });
-        
-        window.generateReason = async () => { /* ...Your Gemini logic... */ };
-        
-        function listenForStudentPasses(studentUid) {
-            const q = query(gatePassesCollectionRef, where("studentUid", "==", studentUid));
-            onSnapshot(q, (snapshot) => {
-                const studentPassList = document.getElementById('studentPassList'); studentPassList.innerHTML = '';
-                if (snapshot.empty) { studentPassList.innerHTML = '<p class="text-gray-500">No passes requested yet.</p>'; return; }
-                const passes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                passes.sort((a, b) => (b.requestedAt?.toDate() || 0) - (a.requestedAt?.toDate() || 0));
-                passes.forEach(pass => studentPassList.appendChild(createStudentPassCard(pass)));
+                } catch (error) {
+                    console.error("Sign up failed:", error);
+                    showModal('Sign Up Failed', error.message, 'error');
+                } finally {
+                    signupButton.disabled = false;
+                    signupButton.textContent = "Create Account";
+                }
             });
-        }
-        
-        function createStudentPassCard(pass) { 
-            const card = document.createElement('div'); const statusMap={pending:{bg:"bg-yellow-100",text:"text-yellow-800",label:"Pending"},approved:{bg:"bg-green-100",text:"text-green-800",label:"Approved"},rejected:{bg:"bg-red-100",text:"text-red-800",label:"Rejected"}},status=statusMap[pass.status]||statusMap.pending;card.className=`p-4 rounded-lg border ${status.bg.replace("bg-","border-")}`;card.innerHTML=`<div class="flex justify-between items-start"><div><p class="font-bold text-gray-800">${pass.reason}</p><p class="text-sm text-gray-600">From: ${new Date(pass.leaveStart).toLocaleString()}</p><p class="text-sm text-gray-600">To: ${new Date(pass.leaveEnd).toLocaleString()}</p>${pass.status==="approved"?`<p class="text-sm font-semibold text-blue-700 mt-2">Pass ID: ${pass.id}</p>`:""}</div><span class="font-semibold py-1 px-3 rounded-full text-sm ${status.bg} ${status.text}">${status.label}</span></div>`; return card;
-        }
-        
-        function listenForPendingRequests() {
-            const q = query(gatePassesCollectionRef, where("status", "==", "pending"));
-            onSnapshot(q, (snapshot) => {
-                const facultyRequestList = document.getElementById('facultyRequestList'); facultyRequestList.innerHTML = '';
-                if (snapshot.empty) { facultyRequestList.innerHTML = '<p class="text-gray-500 col-span-full">No pending requests.</p>'; return; }
-                const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                requests.sort((a, b) => (a.requestedAt?.toDate() || 0) - (b.requestedAt?.toDate() || 0));
-                requests.forEach(req => facultyRequestList.appendChild(createFacultyRequestCard(req)));
-            });
-        }
-        
-        function createFacultyRequestCard(request) {
-            const card = document.createElement('div'); card.className="bg-gray-50 p-5 rounded-xl border";card.innerHTML=`<h3 class="font-bold text-lg">${request.studentName}</h3><p class="text-sm text-gray-500 mb-2">${request.studentId}</p><p class="text-gray-700 mb-3">${request.reason}</p><p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p><p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p><div class="flex space-x-2"><button onclick="updatePassStatus('${request.id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">Approve</button><button onclick="updatePassStatus('${request.id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg">Reject</button></div>`; return card;
-        }
-        
-        window.updatePassStatus = async (id, status) => {
-            const passRef = doc(gatePassesCollectionRef, id); await updateDoc(passRef, { status, processedAt: serverTimestamp() });
-        };
-        
-        document.getElementById('facultyLeaveForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); const userDocRef = doc(usersCollectionRef, auth.currentUser.uid); const userDocSnap = await getDoc(userDocRef); const facultyName = userDocSnap.exists() ? userDocSnap.data().name : "Faculty Member";
-            try {
-                await addDoc(facultyLeavesCollectionRef, {
-                    facultyName: facultyName, facultyUid: auth.currentUser.uid, reason: document.getElementById('facultyReason').value,
-                    leaveStart: document.getElementById('facultyLeaveStart').value, leaveEnd: document.getElementById('facultyLeaveEnd').value,
-                    status: 'pending', requestedAt: serverTimestamp(),
-                });
-                showModal('Success', 'Your leave request has been submitted!', 'success');
-                document.getElementById('facultyReason').value = ''; document.getElementById('facultyLeaveStart').value = ''; document.getElementById('facultyLeaveEnd').value = '';
-            } catch (error) { showModal('Error', 'Failed to submit leave request.', 'error'); }
-        });
-        
-        function listenForMyLeave(facultyUid) {
-            const q = query(facultyLeavesCollectionRef, where("facultyUid", "==", facultyUid));
-            onSnapshot(q, (snapshot) => {
-                const facultyLeaveList = document.getElementById('facultyLeaveList'); facultyLeaveList.innerHTML = '';
-                if (snapshot.empty) { facultyLeaveList.innerHTML = '<p class="text-gray-500">No leave requested yet.</p>'; return; }
-                const leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                leaves.sort((a, b) => (b.requestedAt?.toDate() || 0) - (a.requestedAt?.toDate() || 0));
-                leaves.forEach(leave => facultyLeaveList.appendChild(createStudentPassCard(leave)));
-            });
-        }
-        
-        window.verifyPass = async () => {
-            const passId=document.getElementById("passIdInput").value.trim(),resultDiv=document.getElementById("verificationResult");if(!passId)return void(resultDiv.innerHTML='<p class="text-red-600">Please enter a Pass ID.</p>');const passRef=doc(gatePassesCollectionRef,passId),docSnap=await getDoc(passRef);docSnap.exists()&&"approved"===docSnap.data().status?(()=>{const e=docSnap.data(),t=new Date>new Date(e.leaveEnd),a=t?"yellow":"green",s=t?"EXPIRED":"ACTIVE";resultDiv.innerHTML=`<div class="bg-${a}-100 border-l-4 border-${a}-500 text-${a}-700 p-4 rounded-lg"><p class="font-bold">Pass Verified${t?", but EXPIRED":""}</p><p><strong>Student:</strong> ${e.studentName}</p><p><strong>ID:</strong> ${e.studentId}</p><p><strong>Valid Until:</strong> ${new Date(e.leaveEnd).toLocaleString()}</p><p class="font-bold mt-2">STATUS: ${s}</p></div>`})():resultDiv.innerHTML='<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"><p class="font-bold">Invalid or Unapproved Pass</p></div>'
-        };
-        
-        function listenForPendingFacultyLeaves() {
-            const q = query(facultyLeavesCollectionRef, where("status", "==", "pending"));
-            onSnapshot(q, (snapshot) => {
-                const principalRequestList = document.getElementById('principalRequestList'); principalRequestList.innerHTML = '';
-                if (snapshot.empty) { principalRequestList.innerHTML = '<p class="text-gray-500 col-span-full">No pending requests.</p>'; return; }
-                const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                requests.sort((a, b) => (a.requestedAt?.toDate() || 0) - (b.requestedAt?.toDate() || 0));
-                requests.forEach(req => principalRequestList.appendChild(createPrincipalRequestCard(req)));
-            });
-        }
-        
-        function createPrincipalRequestCard(request) {
-            const card = document.createElement('div'); card.className="bg-gray-50 p-5 rounded-xl border";
-            card.innerHTML=`<h3 class="font-bold text-lg">${request.facultyName}</h3><p class="text-gray-700 mb-3">${request.reason}</p><p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p><p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p><div class="flex space-x-2"><button onclick="updateFacultyLeaveStatus('${request.id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">Approve</button><button onclick="updateFacultyLeaveStatus('${request.id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg">Reject</button></div>`;
-            return card;
-        }
-        
-        window.updateFacultyLeaveStatus = async (id, status) => {
-            const passRef = doc(facultyLeavesCollectionRef, id); await updateDoc(passRef, { status, processedAt: serverTimestamp() });
-        };
-        
-        function showModal(title, message, type = 'info') {
-            const modalTitle = document.getElementById('modalTitle'); const modalMessage = document.getElementById('modalMessage'); const modalIcon = document.getElementById('modalIcon');
-            modalTitle.textContent = title; modalMessage.textContent = message;
-            const icons = {
-                success: `<svg class="w-12 h-12 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
-                error: `<svg class="w-12 h-12 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
-                info: '<svg class="w-12 h-12 text-blue-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+
+            // --- All Other Functions (Logout, Student, Faculty, etc.) ---
+            window.handleLogout = async () => { await signOut(auth); };
+            
+            window.switchFacultyTab = (tab) => {
+                const studentView = document.getElementById('studentRequestsView'); const leaveView = document.getElementById('myLeaveView'); const studentTab = document.getElementById('studentRequestsTab'); const leaveTab = document.getElementById('myLeaveTab');
+                if (tab === 'studentRequests') {
+                    studentView.classList.remove('hidden'); leaveView.classList.add('hidden'); studentTab.classList.add('tab-active'); leaveTab.classList.remove('tab-active');
+                } else {
+                    studentView.classList.add('hidden'); leaveView.classList.remove('hidden'); studentTab.classList.remove('tab-active'); leaveTab.classList.add('tab-active');
+                }
             };
-            modalIcon.innerHTML = icons[type] || icons.info; 
-            document.getElementById('messageModal').classList.remove('hidden');
-        }
-        window.closeModal = () => document.getElementById('messageModal').classList.add('hidden');
+            
+            document.getElementById('gatePassForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    await addDoc(gatePassesCollectionRef, {
+                        studentName: document.getElementById('studentName').value, studentId: document.getElementById('studentId').value, studentUid: auth.currentUser.uid,
+                        reason: document.getElementById('reason').value, leaveStart: document.getElementById('leaveStart').value, leaveEnd: document.getElementById('leaveEnd').value,
+                        status: 'pending', requestedAt: serverTimestamp(),
+                    });
+                    showModal('Success', 'Request submitted!', 'success');
+                    document.getElementById('reason').value = ''; document.getElementById('leaveStart').value = ''; document.getElementById('leaveEnd').value = '';
+                } catch (error) { showModal('Error', 'Failed to submit request.', 'error'); }
+            });
+            
+            window.generateReason = async () => { 
+                // Add your Gemini API call logic here (preferably via a Cloud Function)
+                showModal('Info', 'AI helper is not configured yet.', 'info');
+            };
+            
+            function listenForStudentPasses(studentUid) {
+                const q = query(gatePassesCollectionRef, where("studentUid", "==", studentUid));
+                onSnapshot(q, (snapshot) => {
+                    const studentPassList = document.getElementById('studentPassList');
+                    if (!studentPassList) return; // Add safety check
+                    studentPassList.innerHTML = '';
+                    if (snapshot.empty) { studentPassList.innerHTML = '<p class="text-gray-500">No passes requested yet.</p>'; return; }
+                    const passes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    passes.sort((a, b) => (b.requestedAt?.toDate() || 0) - (a.requestedAt?.toDate() || 0));
+                    passes.forEach(pass => studentPassList.appendChild(createStudentPassCard(pass)));
+                });
+            }
+            
+            function createStudentPassCard(pass) { 
+                const card = document.createElement('div'); const statusMap={pending:{bg:"bg-yellow-100",text:"text-yellow-800",label:"Pending"},approved:{bg:"bg-green-100",text:"text-green-800",label:"Approved"},rejected:{bg:"bg-red-100",text:"text-red-800",label:"Rejected"}},status=statusMap[pass.status]||statusMap.pending;card.className=`p-4 rounded-lg border ${status.bg.replace("bg-","border-")}`;card.innerHTML=`<div class="flex justify-between items-start"><div><p class="font-bold text-gray-800">${pass.reason}</p><p class="text-sm text-gray-600">From: ${new Date(pass.leaveStart).toLocaleString()}</p><p class="text-sm text-gray-600">To: ${new Date(pass.leaveEnd).toLocaleString()}</p>${pass.status==="approved"?`<p class="text-sm font-semibold text-blue-700 mt-2">Pass ID: ${pass.id}</p>`:""}</div><span class="font-semibold py-1 px-3 rounded-full text-sm ${status.bg} ${status.text}">${status.label}</span></div>`; return card;
+            }
+            
+            function listenForPendingRequests() {
+                const q = query(gatePassesCollectionRef, where("status", "==", "pending"));
+                onSnapshot(q, (snapshot) => {
+                    const facultyRequestList = document.getElementById('facultyRequestList');
+                    if (!facultyRequestList) return; // Add safety check
+                    facultyRequestList.innerHTML = '';
+                    if (snapshot.empty) { facultyRequestList.innerHTML = '<p class="text-gray-500 col-span-full">No pending requests.</p>'; return; }
+                    const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    requests.sort((a, b) => (a.requestedAt?.toDate() || 0) - (b.requestedAt?.toDate() || 0));
+                    requests.forEach(req => facultyRequestList.appendChild(createFacultyRequestCard(req)));
+                });
+            }
+            
+            function createFacultyRequestCard(request) {
+                const card = document.createElement('div'); card.className="bg-gray-50 p-5 rounded-xl border";card.innerHTML=`<h3 class="font-bold text-lg">${request.studentName}</h3><p class="text-sm text-gray-500 mb-2">${request.studentId}</p><p class="text-gray-700 mb-3">${request.reason}</p><p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p><p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p><div class="flex space-x-2"><button onclick="updatePassStatus('${request.id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">Approve</button><button onclick="updatePassStatus('${request.id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg">Reject</button></div>`; return card;
+            }
+            
+            window.updatePassStatus = async (id, status) => {
+                const passRef = doc(gatePassesCollectionRef, id); await updateDoc(passRef, { status, processedAt: serverTimestamp() });
+            };
+            
+            document.getElementById('facultyLeaveForm').addEventListener('submit', async (e) => {
+                e.preventDefault(); const userDocRef = doc(usersCollectionRef, auth.currentUser.uid); const userDocSnap = await getDoc(userDocRef); const facultyName = userDocSnap.exists() ? userDocSnap.data().name : "Faculty Member";
+                try {
+                    await addDoc(facultyLeavesCollectionRef, {
+                        facultyName: facultyName, facultyUid: auth.currentUser.uid, reason: document.getElementById('facultyReason').value,
+                        leaveStart: document.getElementById('facultyLeaveStart').value, leaveEnd: document.getElementById('facultyLeaveEnd').value,
+                        status: 'pending', requestedAt: serverTimestamp(),
+                    });
+                    showModal('Success', 'Your leave request has been submitted!', 'success');
+                    document.getElementById('facultyReason').value = ''; document.getElementById('facultyLeaveStart').value = ''; document.getElementById('facultyLeaveEnd').value = '';
+                } catch (error) { showModal('Error', 'Failed to submit leave request.', 'error'); }
+            });
+            
+            function listenForMyLeave(facultyUid) {
+                const q = query(facultyLeavesCollectionRef, where("facultyUid", "==", facultyUid));
+                onSnapshot(q, (snapshot) => {
+                    const facultyLeaveList = document.getElementById('facultyLeaveList');
+                    if (!facultyLeaveList) return; // Add safety check
+                    facultyLeaveList.innerHTML = '';
+                    if (snapshot.empty) { facultyLeaveList.innerHTML = '<p class="text-gray-500">No leave requested yet.</p>'; return; }
+                    const leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    leaves.sort((a, b) => (b.requestedAt?.toDate() || 0) - (a.requestedAt?.toDate() || 0));
+                    leaves.forEach(leave => facultyLeaveList.appendChild(createStudentPassCard(leave)));
+                });
+            }
+            
+            window.verifyPass = async () => {
+                const passId=document.getElementById("passIdInput").value.trim(),resultDiv=document.getElementById("verificationResult");if(!passId)return void(resultDiv.innerHTML='<p class="text-red-600">Please enter a Pass ID.</p>');const passRef=doc(gatePassesCollectionRef,passId),docSnap=await getDoc(passRef);docSnap.exists()&&"approved"===docSnap.data().status?(()=>{const e=docSnap.data(),t=new Date>new Date(e.leaveEnd),a=t?"yellow":"green",s=t?"EXPIRED":"ACTIVE";resultDiv.innerHTML=`<div class="bg-${a}-100 border-l-4 border-${a}-500 text-${a}-700 p-4 rounded-lg"><p class="font-bold">Pass Verified${t?", but EXPIRED":""}</p><p><strong>Student:</strong> ${e.studentName}</p><p><strong>ID:</strong> ${e.studentId}</p><p><strong>Valid Until:</strong> ${new Date(e.leaveEnd).toLocaleString()}</p><p class="font-bold mt-2">STATUS: ${s}</p></div>`})():resultDiv.innerHTML='<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"><p class="font-bold">Invalid or Unapproved Pass</p></div>'
+            };
+            
+            function listenForPendingFacultyLeaves() {
+                const q = query(facultyLeavesCollectionRef, where("status", "==", "pending"));
+                onSnapshot(q, (snapshot) => {
+                    const principalRequestList = document.getElementById('principalRequestList');
+                    if (!principalRequestList) return; // Add safety check
+                    principalRequestList.innerHTML = '';
+                    if (snapshot.empty) { principalRequestList.innerHTML = '<p class="text-gray-500 col-span-full">No pending requests.</p>'; return; }
+                    const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    requests.sort((a, b) => (a.requestedAt?.toDate() || 0) - (b.requestedAt?.toDate() || 0));
+                    requests.forEach(req => principalRequestList.appendChild(createPrincipalRequestCard(req)));
+                });
+            }
+            
+            function createPrincipalRequestCard(request) {
+                const card = document.createElement('div'); card.className="bg-gray-50 p-5 rounded-xl border";
+                card.innerHTML=`<h3 class="font-bold text-lg">${request.facultyName}</h3><p class="text-gray-700 mb-3">${request.reason}</p><p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p><p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p><div class="flex space-x-2"><button onclick="updateFacultyLeaveStatus('${request.id}', 'approved')" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">Approve</button><button onclick="updateFacultyLeaveStatus('${request.id}', 'rejected')" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg">Reject</button></div>`;
+                return card;
+            }
+            
+            window.updateFacultyLeaveStatus = async (id, status) => {
+                const passRef = doc(facultyLeavesCollectionRef, id); await updateDoc(passRef, { status, processedAt: serverTimestamp() });
+            };
+            
+            window.showModal = (title, message, type = 'info') => {
+                const modalTitle = document.getElementById('modalTitle'); const modalMessage = document.getElementById('modalMessage'); const modalIcon = document.getElementById('modalIcon');
+                modalTitle.textContent = title; modalMessage.textContent = message;
+                const icons = {
+                    success: `<svg class="w-12 h-12 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                    error: `<svg class="w-12 h-12 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                    info: '<svg class="w-12 h-12 text-blue-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                };
+                modalIcon.innerHTML = icons[type] || icons.info; 
+                document.getElementById('messageModal').classList.remove('hidden');
+            }
+            window.closeModal = () => document.getElementById('messageModal').classList.add('hidden');
+            
+            // --- This is the line that starts everything! ---
+            console.log("STEP 1: DOM is ready. Initializing Firebase.");
+            initializeFirebase();
+        
+        }); // <-- ** This closes the new 'DOMContentLoaded' listener **
     </script>
 </body>
 </html>
