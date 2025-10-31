@@ -11,7 +11,6 @@
         .modal-backdrop { background-color: rgba(0,0,0,0.5); }
         #generateReasonBtn:disabled { cursor: not-allowed; background-color: #e9d5ff; }
         .tab-active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
-        /* New styles for better visibility of approval queues */
         .approval-queue {
             margin-top: 1.5rem;
         }
@@ -222,12 +221,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        // Note: createUserWithEmailAndPassword is no longer needed here, but we keep it for reference
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
-        // Wait for the HTML to be fully loaded before running any script
+        // This listener ensures your HTML is fully loaded before any JavaScript runs
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- Global DOM Elements ---
@@ -240,13 +238,13 @@
             
             // --- Global Firebase Variables ---
             let app, db, auth, functions, usersCollectionRef, gatePassesCollectionRef, facultyLeavesCollectionRef;
-            let currentUserData = null; // Store current user's Firestore data
+            let currentUserData = null; 
 
             // --- Main App Initialization ---
             function initializeFirebase() {
                 try {
                     const firebaseConfig = {
-                      apiKey: "AIzaSyDtXzJWWoOi8MX0D8IpgF_m4WdZmQezspw", // Use your actual API key
+                      apiKey: "AIzaSyDtXzJWWoOi8MX0D8IpgF_m4WdZmQezspw", // Your API Key
                       authDomain: "gatepasssystem-a2cff.firebaseapp.com",
                       projectId: "gatepasssystem-a2cff",
                       storageBucket: "gatepasssystem-a2cff.appspot.com",  
@@ -258,13 +256,13 @@
                     app = initializeApp(firebaseConfig);
                     db = getFirestore(app);
                     auth = getAuth(app);
-                    functions = getFunctions(app);
+                    functions = getFunctions(app); // Connect to your Cloud Functions
                     
                     usersCollectionRef = collection(db, "users");
                     gatePassesCollectionRef = collection(db, "gatepasses");
                     facultyLeavesCollectionRef = collection(db, "facultyLeaves");
                     
-                    console.log("STEP 2: Firebase has been initialized successfully. Setting up authentication listener.");
+                    console.log("STEP 2: Firebase has been initialized. Setting up auth listener.");
                     setupAuthListener();
 
                 } catch (error) {
@@ -284,7 +282,7 @@
                             const userDocSnap = await getDoc(userDocRef);
                             if (userDocSnap.exists()) {
                                 console.log("User doc found:", userDocSnap.data());
-                                currentUserData = { id: user.uid, ...userDocSnap.data() }; // Store user data
+                                currentUserData = { id: user.uid, ...userDocSnap.data() };
                                 showDashboard(currentUserData);
                             } else {
                                 console.warn("User doc not found, signing out.");
@@ -293,19 +291,19 @@
                             }
                         } else {
                             console.log("No user signed in.");
-                            currentUserData = null; // Clear user data on logout
+                            currentUserData = null;
                             showAuthScreen();
                         }
                     } catch (error) {
                         console.error("Error in auth listener:", error);
-                        showAuthScreen(); // Default to login screen on error
+                        showAuthScreen(); 
                     }
                 });
             }
             
             // --- UI Switching Logic ---
             function showDashboard(userData) {
-                console.log(`STEP 4: Showing dashboard for role: ${userData.role} in department: ${userData.department}`);
+                console.log(`STEP 4: Showing dashboard for role: ${userData.role}`);
                 [loadingScreen, authScreen, studentDashboard, facultyDashboard, securityDashboard, principalDashboard].forEach(el => el.classList.add('hidden'));
 
                 if (userData.role === 'student') {
@@ -319,10 +317,10 @@
                     facultyDashboard.classList.remove('hidden');
                     listenForMyLeave(auth.currentUser.uid); 
 
-                    // Show/hide specific approval queues based on role
                     document.getElementById('pcgApprovalQueue').classList.add('hidden');
                     document.getElementById('ccApprovalQueue').classList.add('hidden');
                     document.getElementById('hodApprovalQueueStudent').classList.add('hidden');
+                    document.getElementById('hodApprovalQueueFaculty').classList.add('hidden');
 
                     if (userData.role === 'pcg') {
                         document.getElementById('pcgApprovalQueue').classList.remove('hidden');
@@ -395,7 +393,6 @@
                 }
             });
             
-            // Set initial visibility for the form
             document.getElementById('userRole').dispatchEvent(new Event('change'));
             
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -437,13 +434,13 @@
                     }
                 }
 
+                // This is the name of your Cloud Function
                 const createSecureUserAccount = httpsCallable(functions, 'createSecureUserAccount');
                 const signupButton = e.target.querySelector('button[type="submit"]');
                 try {
                     signupButton.disabled = true;
                     signupButton.textContent = "Verifying Invite...";
 
-                    // Pass all relevant data to the Cloud Function
                     const result = await createSecureUserAccount(dataToSend);
 
                     showModal('Success!', result.data.message, 'success');
@@ -509,14 +506,11 @@
             // --- Student Pass Card (NEW PARALLEL STATUS) ---
             function createStudentPassCard(pass) { 
                 const card = document.createElement('div');
-                
-                // Simplified status map for the student's view
                 const statusMap={
                     pending_approval:{bg:"bg-yellow-100",text:"text-yellow-800",label:"Pending Approval"},
                     approved:{bg:"bg-green-100",text:"text-green-800",label:"Approved"},
                     rejected:{bg:"bg-red-100",text:"text-red-800",label:"Rejected"}
                 };
-                // Default to pending_approval if status is something else (like pending_cc)
                 const status = statusMap[pass.status] || statusMap.pending_approval; 
                 
                 card.className=`p-4 rounded-lg border ${status.bg.replace("bg-","border-")}`;
@@ -535,8 +529,6 @@
             }
 
             // --- Approval Logic (NEW PARALLEL LISTENERS) ---
-
-            // PCG listens for 'pending_approval' status AND 'pcg_approval: "pending"'
             function listenForPcgRequests(department) {
                 const q = query(gatePassesCollectionRef, 
                     where("department", "==", department), 
@@ -557,7 +549,6 @@
                 });
             }
 
-            // CC listens for 'pending_approval' status AND 'cc_approval: "pending"'
             function listenForCcRequests(department) {
                 const q = query(gatePassesCollectionRef, 
                     where("department", "==", department), 
@@ -578,7 +569,6 @@
                 });
             }
 
-            // HOD listens for 'pending_approval' status AND 'hod_approval: "pending"'
             function listenForHodStudentRequests(department) {
                 const q = query(gatePassesCollectionRef, 
                     where("department", "==", department), 
@@ -603,8 +593,6 @@
             function createApprovalCard(request, roleContext) {
                 const card = document.createElement('div');
                 card.className="bg-gray-50 p-5 rounded-xl border";
-
-                // Helper styles for the approval "scoreboard"
                 const pcgStyle = request.pcg_approval === 'approved' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-700';
                 const ccStyle = request.cc_approval === 'approved' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-700';
                 const hodStyle = request.hod_approval === 'approved' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-700';
@@ -614,14 +602,12 @@
                     <p class="text-sm text-gray-500 mb-2">${request.studentId || request.facultyId || ''}</p>
                     <p class="text-sm text-gray-500 mb-2">Department: ${request.department || 'N/A'}</p>
                     <p class="text-gray-700 mb-3">${request.reason}</p>
-                    
-                    <div class.="mb-3 text-xs space-x-1">
+                    <div class="mb-3 text-xs space-x-1">
                         <span class="font-semibold">Status:</span>
                         <span class="px-2 py-0.5 rounded-full ${pcgStyle}">PCG</span>
                         <span class="px-2 py-0.5 rounded-full ${ccStyle}">CC</span>
                         <span class="px-2 py-0.5 rounded-full ${hodStyle}">HOD</span>
                     </div>
-                    
                     <p class="text-xs">From: ${new Date(request.leaveStart).toLocaleString()}</p>
                     <p class="text-xs mb-4">To: ${new Date(request.leaveEnd).toLocaleString()}</p>
                     <div class="flex space-x-2">
@@ -637,17 +623,14 @@
                 let updateData = { processedAt: serverTimestamp() };
 
                 try {
-                    // 1. Get the current state of the document BEFORE making changes
                     const docSnap = await getDoc(passRef);
                     if (!docSnap.exists()) {
                         return showModal('Error', 'This request no longer exists.', 'error');
                     }
                     const currentData = docSnap.data();
 
-                    // 2. If action is 'rejected', the logic is simple.
                     if (action === 'rejected') {
-                        updateData.status = 'rejected'; // Set main status to rejected
-                        
+                        updateData.status = 'rejected';
                         if (roleContext === 'pcg') updateData.pcg_approval = 'rejected';
                         if (roleContext === 'cc') updateData.cc_approval = 'rejected';
                         if (roleContext === 'hod_student') updateData.hod_approval = 'rejected';
@@ -656,33 +639,27 @@
                         return showModal('Success', 'Gate Pass has been rejected.', 'success');
                     }
 
-                    // 3. If action is 'approved', the logic is more complex.
                     let newPcgStatus = currentData.pcg_approval;
                     let newCcStatus = currentData.cc_approval;
                     let newHodStatus = currentData.hod_approval;
 
                     if (roleContext === 'pcg') {
-                        updateData.pcg_approval = 'approved';
-                        newPcgStatus = 'approved'; 
+                        updateData.pcg_approval = 'approved'; newPcgStatus = 'approved'; 
                         updateData.pcgApprovedBy = auth.currentUser.uid;
                     } else if (roleContext === 'cc') {
-                        updateData.cc_approval = 'approved';
-                        newCcStatus = 'approved'; 
+                        updateData.cc_approval = 'approved'; newCcStatus = 'approved'; 
                         updateData.ccApprovedBy = auth.currentUser.uid;
                     } else if (roleContext === 'hod_student') {
-                        updateData.hod_approval = 'approved';
-                        newHodStatus = 'approved'; 
+                        updateData.hod_approval = 'approved'; newHodStatus = 'approved'; 
                         updateData.hodApprovedBy = auth.currentUser.uid;
                     }
 
-                    // 4. Check if ALL THREE are now approved
                     if (newPcgStatus === 'approved' && newCcStatus === 'approved' && newHodStatus === 'approved') {
                         updateData.status = 'approved';
                     } else {
                         updateData.status = 'pending_approval';
                     }
 
-                    // 5. Apply the update to Firestore
                     await updateDoc(passRef, updateData);
                     
                     if (updateData.status === 'approved') {
@@ -690,7 +667,6 @@
                     } else {
                         showModal('Success', 'Your approval has been registered. Still waiting on other approvals.', 'success');
                     }
-
                 } catch (error) {
                     showModal('Error', `Failed to update pass status: ${error.message}`, 'error');
                 }
@@ -719,9 +695,7 @@
                         status: 'pending_hod', requestedAt: serverTimestamp(),
                     });
                     showModal('Success', 'Your leave request has been submitted for HOD approval!', 'success');
-                    document.getElementById('facultyReason').value = '';
-                    document.getElementById('facultyLeaveStart').value = '';
-                    document.getElementById('facultyLeaveEnd').value = '';
+                    e.target.reset();
                 } catch (error) { 
                     showModal('Error', 'Failed to submit leave request.', 'error'); 
                 }
@@ -767,10 +741,6 @@
             function listenForHodFacultyRequests(department) {
                 const q = query(facultyLeavesCollectionRef, where("department", "==", department), where("status", "==", "pending_hod"));
                 onSnapshot(q, (snapshot) => {
-                    // Note: This logic seems to be writing to the Principal's list. This might be a bug.
-                    // Assuming HODs see faculty requests in their *own* dashboard, this should be fixed.
-                    // For now, I'll leave it as it was, writing to 'principalRequestList'.
-                    // A better fix would be a new div 'hodFacultyRequestList' on the faculty dashboard.
                     const principalRequestList = document.getElementById('principalRequestList'); 
                     if (!principalRequestList) return;
                     principalRequestList.innerHTML = '';
